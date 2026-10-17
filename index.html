@@ -27,7 +27,7 @@
             align-items: center;
         }
 
-        h1, h2, h3 { margin: 5px 0; color: #f0f6fc; }
+        h2 { margin: 5px 0; color: #f0f6fc; }
         .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 15px; }
 
         .card {
@@ -44,7 +44,7 @@
 
         .stat-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             text-align: left;
             margin-top: 10px;
@@ -60,7 +60,7 @@
         }
 
         .stat-box label {
-            font-size: 11px;
+            font-size: 10px;
             color: #8b949e;
             text-transform: uppercase;
             font-weight: bold;
@@ -166,3 +166,182 @@
                 <label>Physical Strength</label>
                 <input type="number" id="strength" value="10" onchange="updateAll()">
             </div>
+            <div class="stat-box">
+                <label>Intelligence</label>
+                <input type="number" id="intelligence" value="10" onchange="updateAll()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Transformation Multiplier -->
+    <div class="card">
+        <h3>🌀 State / Transformation</h3>
+        <select id="transformation" onchange="updateAll()">
+            <option value="1">Base Form (x1)</option>
+            <option value="1.5">Shikai / Released (x1.5)</option>
+            <option value="2">Mask / Resurrección (x2.0)</option>
+            <option value="5">Bankai / Divine Form (x5.0)</option>
+            <option value="10">True Unleashed (x10.0)</option>
+        </select>
+
+        <div class="metric-container">
+            <div class="metric">
+                <div class="metric-title">Reiatsu Power</div>
+                <div class="metric-value" id="reiatsuPower">0</div>
+            </div>
+            <div class="metric">
+                <div class="metric-title">Combat Rating</div>
+                <div class="metric-value" id="combatRating">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- XP Training Allocation -->
+    <div class="card">
+        <h3>🎯 Training & Allocation</h3>
+        <div style="font-size: 12px; color: #8b949e; margin-bottom: 8px;">Rate: <span class="highlight">5 XP = +1 Stat Point</span></div>
+        <input type="number" id="xpInput" placeholder="Enter Earned XP">
+        <select id="statTarget">
+            <option value="offense">Offense</option>
+            <option value="defense">Defense</option>
+            <option value="mobility">Mobility</option>
+            <option value="reiryoku">Reiryoku</option>
+            <option value="strength">Physical Strength</option>
+            <option value="intelligence">Intelligence</option>
+        </select>
+        <button onclick="addXP()">Apply Training XP</button>
+        <p style="font-size: 13px; margin-top: 10px; margin-bottom: 0;">Unused XP Pool: <span id="xpPool" class="highlight">0</span> XP</p>
+    </div>
+
+    <!-- Hexagon Radar Chart -->
+    <div class="card">
+        <div class="chart-container">
+            <canvas id="radarChart"></canvas>
+        </div>
+        <button class="btn-danger" onclick="resetAll()">Reset All Data</button>
+    </div>
+
+    <script>
+        const stats = ['offense', 'defense', 'mobility', 'reiryoku', 'strength', 'intelligence'];
+        let chart;
+
+        function initChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Offense', 'Defense', 'Mobility', 'Reiryoku', 'Phys. Strength', 'Intelligence'],
+                    datasets: [{
+                        label: 'Combat Potential',
+                        data: stats.map(s => getCalculatedStat(s)),
+                        backgroundColor: 'rgba(0, 242, 254, 0.2)',
+                        borderColor: '#00f2fe',
+                        pointBackgroundColor: '#00f2fe',
+                        pointBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            grid: { color: '#30363d' },
+                            angleLines: { color: '#30363d' },
+                            pointLabels: { color: '#c9d1d9', font: { size: 11, weight: 'bold' } },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function getCalculatedStat(statId) {
+            const base = Number(document.getElementById(statId).value) || 0;
+            const mult = Number(document.getElementById('transformation').value) || 1;
+            return Math.round(base * mult);
+        }
+
+        function updateAll() {
+            const mult = Number(document.getElementById('transformation').value) || 1;
+            const values = stats.map(s => getCalculatedStat(s));
+
+            // Reiatsu Power = Reiryoku * Multiplier
+            const baseReiryoku = Number(document.getElementById('reiryoku').value) || 0;
+            const reiatsuPower = Math.round(baseReiryoku * mult * 10);
+            document.getElementById('reiatsuPower').innerText = reiatsuPower.toLocaleString();
+
+            // Combat Rating = Total Stats * Multiplier
+            const totalBase = stats.reduce((sum, s) => sum + (Number(document.getElementById(s).value) || 0), 0);
+            const combatRating = Math.round(totalBase * mult);
+            document.getElementById('combatRating').innerText = combatRating.toLocaleString();
+
+            if (chart) {
+                chart.data.datasets[0].data = values;
+                chart.update();
+            }
+            saveData();
+        }
+
+        function addXP() {
+            const xp = Number(document.getElementById('xpInput').value);
+            if (xp <= 0) return;
+
+            const target = document.getElementById('statTarget').value;
+            let currentPool = Number(localStorage.getItem('greatSage_xpPool') || 0) + xp;
+            
+            const pointsToAdd = Math.floor(currentPool / 5);
+            const remainder = currentPool % 5;
+
+            if (pointsToAdd > 0) {
+                const statElem = document.getElementById(target);
+                statElem.value = Number(statElem.value) + pointsToAdd;
+            }
+
+            document.getElementById('xpPool').innerText = remainder;
+            localStorage.setItem('greatSage_xpPool', remainder);
+            document.getElementById('xpInput').value = '';
+            updateAll();
+        }
+
+        function saveData() {
+            const data = {
+                name: document.getElementById('charName').value,
+                trans: document.getElementById('transformation').value
+            };
+            stats.forEach(s => data[s] = document.getElementById(s).value);
+            localStorage.setItem('greatSage_data', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = JSON.parse(localStorage.getItem('greatSage_data') || '{}');
+            if (saved.name) document.getElementById('charName').value = saved.name;
+            if (saved.trans) document.getElementById('transformation').value = saved.trans;
+            
+            stats.forEach(s => {
+                if (saved[s] !== undefined) document.getElementById(s).value = saved[s];
+            });
+            
+            document.getElementById('xpPool').innerText = localStorage.getItem('greatSage_xpPool') || 0;
+        }
+
+        function resetAll() {
+            if (confirm("Are you sure you want to reset all stats and character data?")) {
+                localStorage.removeItem('greatSage_data');
+                localStorage.removeItem('greatSage_xpPool');
+                stats.forEach(s => document.getElementById(s).value = 10);
+                document.getElementById('charName').value = '';
+                document.getElementById('transformation').value = '1';
+                document.getElementById('xpPool').innerText = 0;
+                updateAll();
+            }
+        }
+
+        window.onload = () => {
+            loadData();
+            initChart();
+            updateAll();
+        };
+    </script>
+</body>
+</html>
