@@ -295,7 +295,7 @@
         <!-- XP Progression Bar -->
         <div class="xp-header">
             <span>XP Progression</span>
-            <span id="xpProgText">0 / 100 XP</span>
+            <span id="xpProgText">0 / 1000 XP</span>
         </div>
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="xpBarFill"></div>
@@ -613,12 +613,12 @@
         function getLevelAndProgress(totalXP) {
             let level = 1;
             let currentXP = totalXP;
-            let xpNeeded = level * 100;
+            let xpNeeded = level * 1000;
 
             while (currentXP >= xpNeeded) {
                 currentXP -= xpNeeded;
                 level++;
-                xpNeeded = level * 100;
+                xpNeeded = level * 1000;
             }
 
             return { level, currentXP, xpNeeded };
