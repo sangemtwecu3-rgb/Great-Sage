@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Great Sage</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,7 +15,7 @@
             --text-main: #ffffff;
             --text-muted: #8e9bb0;
             --red-border: #e84118;
-            --blue-btn: #00a8ff;
+            --blue-btn: #0070e0;
         }
 
         body {
@@ -34,7 +34,6 @@
             max-width: 420px;
         }
 
-        /* Top Header */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -60,7 +59,6 @@
             font-weight: bold;
         }
 
-        /* XP Progress Header */
         .xp-header {
             display: flex;
             justify-content: space-between;
@@ -85,7 +83,6 @@
             transition: width 0.3s ease;
         }
 
-        /* Card Panels */
         .card {
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -119,7 +116,6 @@
             color: #2ed573;
         }
 
-        /* Inputs & Buttons */
         input, select {
             background-color: var(--input-bg);
             border: 1px solid #2d3748;
@@ -164,7 +160,7 @@
         }
 
         .btn-blue {
-            background-color: #0070e0;
+            background-color: var(--blue-btn);
             color: #fff;
             border: none;
             padding: 12px;
@@ -176,13 +172,25 @@
             margin-top: 15px;
         }
 
+        .btn-reset {
+            background-color: #da3633;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
         .input-row {
             display: flex;
             gap: 8px;
             margin-bottom: 8px;
         }
 
-        /* Metrics Grid */
         .metrics-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -209,7 +217,6 @@
             color: #fff;
         }
 
-        /* Training Allocator & Editable Stat Rows */
         .allocator-row {
             margin-bottom: 14px;
         }
@@ -288,7 +295,7 @@
         <!-- XP Progression Bar -->
         <div class="xp-header">
             <span>XP Progression</span>
-            <span id="xpProgText">0 / 1000 XP</span>
+            <span id="xpProgText">0 / 100 XP</span>
         </div>
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="xpBarFill"></div>
@@ -333,12 +340,18 @@
             </div>
         </div>
 
-        <!-- Gain XP Directly -->
+        <!-- Gain XP Directly / Opponent Combat -->
         <div class="card">
-            <div class="card-title" style="color: var(--teal-accent); margin-bottom: 10px;">⚡ Gain XP Directly</div>
+            <div class="card-title" style="color: var(--teal-accent); margin-bottom: 10px;">⚡ Gain XP / Defeat Opponent</div>
             <div class="input-row">
-                <input type="number" id="xpGainInput" placeholder="Enter XP gained (e.g. 12)">
+                <input type="number" id="oppLvlInput" placeholder="Opponent Level (e.g. 2)">
+                <button class="btn-secondary" style="width: 110px;" onclick="addOpponentXP()">Defeat (Lvl×1000)</button>
+            </div>
+
+            <div class="input-row" style="margin-top: 10px;">
+                <input type="number" id="xpGainInput" placeholder="Or Enter Direct XP (e.g. 50)">
                 <select id="xpStatTarget">
+                    <option value="all">ALL (Distribute Equally)</option>
                     <option value="offense">Offense</option>
                     <option value="defense">Defense</option>
                     <option value="mobility">Mobility</option>
@@ -356,6 +369,7 @@
             <div class="input-row">
                 <input type="number" id="directPointInput" placeholder="Enter Stat Points (e.g. 3)">
                 <select id="directStatTarget">
+                    <option value="all">ALL (Distribute Equally)</option>
                     <option value="offense">Offense</option>
                     <option value="defense">Defense</option>
                     <option value="mobility">Mobility</option>
@@ -364,17 +378,16 @@
                     <option value="intelligence">Intelligence</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="addDirectPoints()">Add Stat Points directly</button>
+            <button class="btn-primary" onclick="addDirectPoints()">Add Stat Points Directly</button>
         </div>
 
-        <!-- Training Session Allocator (With Direct Editable Inputs next to names) -->
+        <!-- Training Session Allocator -->
         <div class="card">
             <div class="card-title-row">
                 <div class="card-title">Training Session Allocator</div>
                 <div class="stat-gain-tag" id="sessionXpDisplay">+0 XP</div>
             </div>
 
-            <!-- Offense -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -386,7 +399,6 @@
                 <input type="range" id="slide_offense" min="0" max="20" value="0" oninput="updateSliders()">
             </div>
 
-            <!-- Defense -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -398,7 +410,6 @@
                 <input type="range" id="slide_defense" min="0" max="20" value="0" oninput="updateSliders()">
             </div>
 
-            <!-- Mobility -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -410,7 +421,6 @@
                 <input type="range" id="slide_mobility" min="0" max="20" value="0" oninput="updateSliders()">
             </div>
 
-            <!-- Reiryoku -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -422,7 +432,6 @@
                 <input type="range" id="slide_reiryoku" min="0" max="20" value="0" oninput="updateSliders()">
             </div>
 
-            <!-- Physical Strength -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -434,7 +443,6 @@
                 <input type="range" id="slide_strength" min="0" max="20" value="0" oninput="updateSliders()">
             </div>
 
-            <!-- Intelligence -->
             <div class="allocator-row">
                 <div class="allocator-header">
                     <div class="stat-name-input-group">
@@ -447,6 +455,7 @@
             </div>
 
             <button class="btn-blue" onclick="executeSession()">Execute Session Training</button>
+            <button class="btn-reset" onclick="resetAllData()">🔄 Reset All Progress</button>
         </div>
 
     </div>
@@ -527,72 +536,117 @@
                 }
             });
 
-            let totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0) + totalXpGained;
-            localStorage.setItem('greatSage_totalXP', totalXP);
-
+            processXPGain(totalXpGained);
             updateSliders();
             updateAll();
         }
 
-        function updateAll() {
-            const values = stats.map(s => getCalculatedStat(s));
-
-            // Reiatsu Power = Reiryoku * Multiplier * 10
-            const baseReiryoku = Number(document.getElementById('reiryoku').value) || 0;
-            const reiatsuPower = Math.round(baseReiryoku * activeMultiplier * 10);
-            document.getElementById('reiatsuVal').innerText = reiatsuPower.toLocaleString();
-
-            // Combat Rating = Total Base Stats * Multiplier
-            const totalBase = stats.reduce((sum, s) => sum + (Number(document.getElementById(s).value) || 0), 0);
-            const combatRating = Math.round(totalBase * activeMultiplier);
-            document.getElementById('combatVal').innerText = combatRating.toLocaleString();
-
-            // XP Bar & Level
-            const totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0);
-            const currentLevel = Math.floor(totalXP / 1000) + 1;
-            document.getElementById('lvlBadge').innerText = `LVL ${currentLevel}`;
-            document.getElementById('xpProgText').innerText = `${totalXP % 1000} / 1000 XP`;
-            document.getElementById('xpBarFill').style.width = `${((totalXP % 1000) / 1000) * 100}%`;
-
-            if (chart) {
-                chart.data.datasets[0].data = values;
-                chart.update();
-            }
-            saveData();
+        function addOpponentXP() {
+            const oppLvl = Number(document.getElementById('oppLvlInput').value);
+            if (oppLvl <= 0) return;
+            const earnedXP = oppLvl * 1000;
+            const target = document.getElementById('xpStatTarget').value;
+            applyXP(earnedXP, target);
+            document.getElementById('oppLvlInput').value = '';
         }
 
         function addXP() {
             const xp = Number(document.getElementById('xpGainInput').value);
             if (xp <= 0) return;
-
             const target = document.getElementById('xpStatTarget').value;
-            let totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0) + xp;
-            localStorage.setItem('greatSage_totalXP', totalXP);
+            applyXP(xp, target);
+            document.getElementById('xpGainInput').value = '';
+        }
 
-            let currentPool = Number(localStorage.getItem('greatSage_xpPool') || 0) + xp;
+        function applyXP(xpAmount, target) {
+            processXPGain(xpAmount);
+
+            let currentPool = Number(localStorage.getItem('greatSage_xpPool') || 0) + xpAmount;
             const pointsToAdd = Math.floor(currentPool / 5);
             const remainder = currentPool % 5;
 
             if (pointsToAdd > 0) {
-                const statElem = document.getElementById(target);
-                statElem.value = Number(statElem.value) + pointsToAdd;
+                distributeStatPoints(pointsToAdd, target);
             }
 
             localStorage.setItem('greatSage_xpPool', remainder);
-            document.getElementById('xpGainInput').value = '';
             updateAll();
         }
 
         function addDirectPoints() {
             const points = Number(document.getElementById('directPointInput').value);
             if (points <= 0) return;
-
             const target = document.getElementById('directStatTarget').value;
-            const statElem = document.getElementById(target);
-            statElem.value = Number(statElem.value) + points;
 
+            distributeStatPoints(points, target);
             document.getElementById('directPointInput').value = '';
             updateAll();
+        }
+
+        function distributeStatPoints(pts, target) {
+            if (target === 'all') {
+                const perStat = Math.floor(pts / stats.length);
+                const extraRemainder = pts % stats.length;
+                if (perStat > 0) {
+                    stats.forEach(s => {
+                        const statElem = document.getElementById(s);
+                        statElem.value = Number(statElem.value) + perStat;
+                    });
+                }
+                if (extraRemainder > 0) {
+                    let pool = Number(localStorage.getItem('greatSage_xpPool') || 0) + (extraRemainder * 5);
+                    localStorage.setItem('greatSage_xpPool', pool);
+                }
+            } else {
+                const statElem = document.getElementById(target);
+                if (statElem) {
+                    statElem.value = Number(statElem.value) + pts;
+                }
+            }
+        }
+
+        function processXPGain(gainedXP) {
+            let totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0) + gainedXP;
+            localStorage.setItem('greatSage_totalXP', totalXP);
+        }
+
+        function getLevelAndProgress(totalXP) {
+            let level = 1;
+            let currentXP = totalXP;
+            let xpNeeded = level * 100;
+
+            while (currentXP >= xpNeeded) {
+                currentXP -= xpNeeded;
+                level++;
+                xpNeeded = level * 100;
+            }
+
+            return { level, currentXP, xpNeeded };
+        }
+
+        function updateAll() {
+            const values = stats.map(s => getCalculatedStat(s));
+
+            const baseReiryoku = Number(document.getElementById('reiryoku').value) || 0;
+            const reiatsuPower = Math.round(baseReiryoku * activeMultiplier * 10);
+            document.getElementById('reiatsuVal').innerText = reiatsuPower.toLocaleString();
+
+            const totalBase = stats.reduce((sum, s) => sum + (Number(document.getElementById(s).value) || 0), 0);
+            const combatRating = Math.round(totalBase * activeMultiplier);
+            document.getElementById('combatVal').innerText = combatRating.toLocaleString();
+
+            const totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0);
+            const { level, currentXP, xpNeeded } = getLevelAndProgress(totalXP);
+
+            document.getElementById('lvlBadge').innerText = `LVL ${level}`;
+            document.getElementById('xpProgText').innerText = `${currentXP} / ${xpNeeded} XP`;
+            document.getElementById('xpBarFill').style.width = `${Math.min((currentXP / xpNeeded) * 100, 100)}%`;
+
+            if (chart) {
+                chart.data.datasets[0].data = values;
+                chart.update();
+            }
+            saveData();
         }
 
         function saveData() {
@@ -606,6 +660,19 @@
             stats.forEach(s => {
                 if (saved[s] !== undefined) document.getElementById(s).value = saved[s];
             });
+        }
+
+        function resetAllData() {
+            if (confirm("Are you sure you want to reset all stats, level, and XP back to defaults?")) {
+                localStorage.removeItem('greatSage_data');
+                localStorage.removeItem('greatSage_totalXP');
+                localStorage.removeItem('greatSage_xpPool');
+                stats.forEach(s => document.getElementById(s).value = 10);
+                activeMultiplier = 1;
+                document.getElementById('stateBadge').innerText = 'BASE STATE';
+                updateSliders();
+                updateAll();
+            }
         }
 
         window.onload = () => {
