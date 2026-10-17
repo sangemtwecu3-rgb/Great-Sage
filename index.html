@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Great Sage Training Simulator</title>
+    <title>Great Sage</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --accent: #238636;
-            --accent-hover: #2ea043;
-            --text-color: #c9d1d9;
-            --border: #30363d;
-            --gold: #d29922;
+            --bg-dark: #0f141c;
+            --card-bg: #171e28;
+            --input-bg: #222b37;
+            --teal-accent: #00d2d3;
+            --teal-btn: #00b4b5;
+            --text-main: #ffffff;
+            --text-muted: #8e9bb0;
+            --red-border: #e84118;
+            --blue-btn: #00a8ff;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             margin: 0;
             padding: 15px;
             display: flex;
@@ -27,202 +29,431 @@
             align-items: center;
         }
 
-        h2 { margin: 5px 0; color: #f0f6fc; }
-        .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 15px; }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
+        .container {
             width: 100%;
             max-width: 420px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .stat-grid {
+        /* Top Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--teal-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lvl-badge {
+            background-color: #00a8ff;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* XP Progress Header */
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .progress-bar-bg {
+            background-color: var(--input-bg);
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-fill {
+            background-color: var(--teal-accent);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Card Panels */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .card-red-border {
+            border: 1.5px solid var(--red-border);
+        }
+
+        .card-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .state-badge {
+            font-size: 11px;
+            font-weight: bold;
+            color: #2ed573;
+        }
+
+        /* Inputs & Buttons */
+        input, select {
+            background-color: var(--input-bg);
+            border: 1px solid #2d3748;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn-group {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-bg);
+            color: #fff;
+            border: 1px solid #2d3748;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--teal-btn);
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
             margin-top: 10px;
         }
 
-        .stat-box {
-            background: #0d1117;
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
+        .btn-blue {
+            background-color: #0070e0;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 15px;
         }
 
-        .stat-box label {
-            font-size: 10px;
-            color: #8b949e;
-            text-transform: uppercase;
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px 15px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-muted);
             font-weight: bold;
             margin-bottom: 4px;
         }
 
-        .stat-box input {
-            background: transparent;
-            border: none;
-            color: #00f2fe;
-            font-size: 18px;
+        .metric-val {
+            font-size: 22px;
             font-weight: bold;
-            outline: none;
-            width: 100%;
-        }
-
-        input[type="text"], input[type="number"], select {
-            background-color: #0d1117;
-            border: 1px solid var(--border);
             color: #fff;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 5px;
         }
 
-        button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            width: 100%;
-            margin-top: 10px;
-            cursor: pointer;
-            transition: 0.2s;
+        /* Training Allocator & Editable Stat Rows */
+        .allocator-row {
+            margin-bottom: 14px;
         }
 
-        button:hover { background-color: var(--accent-hover); }
-
-        .btn-danger {
-            background-color: #da3633;
-            margin-top: 15px;
-        }
-        .btn-danger:hover { background-color: #f85149; }
-
-        .metric-container {
+        .allocator-header {
             display: flex;
-            justify-content: space-around;
-            background: #0d1117;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            margin-top: 10px;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 6px;
         }
 
-        .metric { text-align: center; }
-        .metric-title { font-size: 11px; color: #8b949e; text-transform: uppercase; }
-        .metric-value { font-size: 20px; font-weight: bold; color: var(--gold); }
+        .stat-name-input-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .inline-stat-input {
+            width: 55px !important;
+            padding: 4px 6px !important;
+            font-size: 13px !important;
+            font-weight: bold !important;
+            color: var(--teal-accent) !important;
+            text-align: center;
+            height: 28px;
+            background-color: var(--input-bg);
+            border: 1px solid #2d3748;
+            border-radius: 6px;
+        }
+
+        .stat-gain-tag {
+            color: var(--teal-accent);
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #2d3748;
+            border-radius: 5px;
+            outline: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--teal-accent);
+            cursor: pointer;
+        }
 
         .chart-container {
-            position: relative;
             width: 100%;
-            max-width: 380px;
+            max-width: 350px;
             margin: 0 auto;
         }
-
-        .highlight { color: #58a6ff; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>⚡ GREAT SAGE</h2>
-    <div class="subtitle">RPG Training & Combat Rating Simulator</div>
+    <div class="container">
 
-    <!-- Character Config & Baseline Stats -->
-    <div class="card">
-        <h3>👤 Character Profile</h3>
-        <input type="text" id="charName" placeholder="Enter Character Name" onchange="saveData()">
-        
-        <div class="stat-grid">
-            <div class="stat-box">
-                <label>Offense</label>
-                <input type="number" id="offense" value="10" onchange="updateAll()">
-            </div>
-            <div class="stat-box">
-                <label>Defense</label>
-                <input type="number" id="defense" value="10" onchange="updateAll()">
-            </div>
-            <div class="stat-box">
-                <label>Mobility</label>
-                <input type="number" id="mobility" value="10" onchange="updateAll()">
-            </div>
-            <div class="stat-box">
-                <label>Reiryoku</label>
-                <input type="number" id="reiryoku" value="10" onchange="updateAll()">
-            </div>
-            <div class="stat-box">
-                <label>Physical Strength</label>
-                <input type="number" id="strength" value="10" onchange="updateAll()">
-            </div>
-            <div class="stat-box">
-                <label>Intelligence</label>
-                <input type="number" id="intelligence" value="10" onchange="updateAll()">
+        <!-- Top Header -->
+        <div class="app-header">
+            <div class="app-title">🔮 Great Sage</div>
+            <div class="lvl-badge" id="lvlBadge">LVL 1</div>
+        </div>
+
+        <!-- XP Progression Bar -->
+        <div class="xp-header">
+            <span>XP Progression</span>
+            <span id="xpProgText">0 / 1000 XP</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="xpBarFill"></div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="card">
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
             </div>
         </div>
-    </div>
 
-    <!-- Transformation Multiplier -->
-    <div class="card">
-        <h3>🌀 State / Transformation</h3>
-        <select id="transformation" onchange="updateAll()">
-            <option value="1">Base Form (x1)</option>
-            <option value="1.5">Shikai / Released (x1.5)</option>
-            <option value="2">Mask / Resurrección (x2.0)</option>
-            <option value="5">Bankai / Divine Form (x5.0)</option>
-            <option value="10">True Unleashed (x10.0)</option>
-        </select>
-
-        <div class="metric-container">
-            <div class="metric">
-                <div class="metric-title">Reiatsu Power</div>
-                <div class="metric-value" id="reiatsuPower">0</div>
+        <!-- Transformation Boost -->
+        <div class="card card-red-border">
+            <div class="card-title-row">
+                <div class="card-title" style="color: #ff6b6b;">🔥 Transformation Boost</div>
+                <div class="state-badge" id="stateBadge">BASE STATE</div>
             </div>
-            <div class="metric">
-                <div class="metric-title">Combat Rating</div>
-                <div class="metric-value" id="combatRating">0</div>
+
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="setMultiplier(2, 'MASK STATE')">Mask (x2)</button>
+                <button class="btn-secondary" onclick="setMultiplier(10, 'BANKAI STATE')">Bankai (x10)</button>
+            </div>
+
+            <div class="input-row">
+                <input type="number" id="customMultInput" placeholder="Custom Multiplier (e.g. 5)">
+                <button class="btn-secondary" style="width: 80px;" onclick="applyCustomMultiplier()">Set</button>
+            </div>
+
+            <button class="btn-secondary" style="width: 100%; margin-top: 6px;" onclick="setMultiplier(1, 'BASE STATE')">Deactivate Boost</button>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Reiatsu Power</div>
+                <div class="metric-val" id="reiatsuVal">500</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Combat Rating</div>
+                <div class="metric-val" id="combatVal">315</div>
             </div>
         </div>
-    </div>
 
-    <!-- XP Training Allocation -->
-    <div class="card">
-        <h3>🎯 Training & Allocation</h3>
-        <div style="font-size: 12px; color: #8b949e; margin-bottom: 8px;">Rate: <span class="highlight">5 XP = +1 Stat Point</span></div>
-        <input type="number" id="xpInput" placeholder="Enter Earned XP">
-        <select id="statTarget">
-            <option value="offense">Offense</option>
-            <option value="defense">Defense</option>
-            <option value="mobility">Mobility</option>
-            <option value="reiryoku">Reiryoku</option>
-            <option value="strength">Physical Strength</option>
-            <option value="intelligence">Intelligence</option>
-        </select>
-        <button onclick="addXP()">Apply Training XP</button>
-        <p style="font-size: 13px; margin-top: 10px; margin-bottom: 0;">Unused XP Pool: <span id="xpPool" class="highlight">0</span> XP</p>
-    </div>
-
-    <!-- Hexagon Radar Chart -->
-    <div class="card">
-        <div class="chart-container">
-            <canvas id="radarChart"></canvas>
+        <!-- Gain XP Directly -->
+        <div class="card">
+            <div class="card-title" style="color: var(--teal-accent); margin-bottom: 10px;">⚡ Gain XP Directly</div>
+            <div class="input-row">
+                <input type="number" id="xpGainInput" placeholder="Enter XP gained (e.g. 12)">
+                <select id="xpStatTarget">
+                    <option value="offense">Offense</option>
+                    <option value="defense">Defense</option>
+                    <option value="mobility">Mobility</option>
+                    <option value="reiryoku">Reiryoku</option>
+                    <option value="strength">Physical Strength</option>
+                    <option value="intelligence">Intelligence</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="addXP()">Add XP & Allocate Stats</button>
         </div>
-        <button class="btn-danger" onclick="resetAll()">Reset All Data</button>
+
+        <!-- Allocate Points Directly -->
+        <div class="card">
+            <div class="card-title" style="color: #ff6b6b; margin-bottom: 10px;">🔴 Allocate Points Directly</div>
+            <div class="input-row">
+                <input type="number" id="directPointInput" placeholder="Enter Stat Points (e.g. 3)">
+                <select id="directStatTarget">
+                    <option value="offense">Offense</option>
+                    <option value="defense">Defense</option>
+                    <option value="mobility">Mobility</option>
+                    <option value="reiryoku">Reiryoku</option>
+                    <option value="strength">Physical Strength</option>
+                    <option value="intelligence">Intelligence</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="addDirectPoints()">Add Stat Points directly</button>
+        </div>
+
+        <!-- Training Session Allocator (With Direct Editable Inputs next to names) -->
+        <div class="card">
+            <div class="card-title-row">
+                <div class="card-title">Training Session Allocator</div>
+                <div class="stat-gain-tag" id="sessionXpDisplay">+0 XP</div>
+            </div>
+
+            <!-- Offense -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Offense</span>
+                        <input type="number" class="inline-stat-input" id="offense" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_offense">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_offense" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <!-- Defense -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Defense</span>
+                        <input type="number" class="inline-stat-input" id="defense" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_defense">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_defense" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <!-- Mobility -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Mobility</span>
+                        <input type="number" class="inline-stat-input" id="mobility" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_mobility">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_mobility" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <!-- Reiryoku -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Reiryoku</span>
+                        <input type="number" class="inline-stat-input" id="reiryoku" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_reiryoku">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_reiryoku" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <!-- Physical Strength -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Physical Strength</span>
+                        <input type="number" class="inline-stat-input" id="strength" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_strength">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_strength" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <!-- Intelligence -->
+            <div class="allocator-row">
+                <div class="allocator-header">
+                    <div class="stat-name-input-group">
+                        <span>Intelligence</span>
+                        <input type="number" class="inline-stat-input" id="intelligence" value="10" onchange="updateAll()">
+                    </div>
+                    <span class="stat-gain-tag" id="gain_intelligence">+0 Stats</span>
+                </div>
+                <input type="range" id="slide_intelligence" min="0" max="20" value="0" oninput="updateSliders()">
+            </div>
+
+            <button class="btn-blue" onclick="executeSession()">Execute Session Training</button>
+        </div>
+
     </div>
 
     <script>
         const stats = ['offense', 'defense', 'mobility', 'reiryoku', 'strength', 'intelligence'];
+        let activeMultiplier = 1;
         let chart;
 
         function initChart() {
@@ -230,13 +461,12 @@
             chart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Offense', 'Defense', 'Mobility', 'Reiryoku', 'Phys. Strength', 'Intelligence'],
+                    labels: ['Offense', 'Defense', 'Mobility', 'Reiryoku', 'Strength', 'Intelligence'],
                     datasets: [{
-                        label: 'Combat Potential',
                         data: stats.map(s => getCalculatedStat(s)),
-                        backgroundColor: 'rgba(0, 242, 254, 0.2)',
-                        borderColor: '#00f2fe',
-                        pointBackgroundColor: '#00f2fe',
+                        backgroundColor: 'rgba(0, 210, 211, 0.35)',
+                        borderColor: '#00d2d3',
+                        pointBackgroundColor: '#00d2d3',
                         pointBorderColor: '#fff',
                         borderWidth: 2
                     }]
@@ -245,9 +475,9 @@
                     scales: {
                         r: {
                             beginAtZero: true,
-                            grid: { color: '#30363d' },
-                            angleLines: { color: '#30363d' },
-                            pointLabels: { color: '#c9d1d9', font: { size: 11, weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.15)' },
+                            pointLabels: { color: '#ffffff', font: { size: 11, weight: 'bold' } },
                             ticks: { display: false }
                         }
                     },
@@ -258,23 +488,71 @@
 
         function getCalculatedStat(statId) {
             const base = Number(document.getElementById(statId).value) || 0;
-            const mult = Number(document.getElementById('transformation').value) || 1;
-            return Math.round(base * mult);
+            return Math.round(base * activeMultiplier);
+        }
+
+        function setMultiplier(val, stateName) {
+            activeMultiplier = val;
+            document.getElementById('stateBadge').innerText = stateName;
+            updateAll();
+        }
+
+        function applyCustomMultiplier() {
+            const customVal = Number(document.getElementById('customMultInput').value);
+            if (customVal > 0) {
+                setMultiplier(customVal, `CUSTOM (x${customVal})`);
+                document.getElementById('customMultInput').value = '';
+            }
+        }
+
+        function updateSliders() {
+            let totalGainStats = 0;
+            stats.forEach(s => {
+                const val = Number(document.getElementById(`slide_${s}`).value);
+                document.getElementById(`gain_${s}`).innerText = `+${val} Stats`;
+                totalGainStats += val;
+            });
+            document.getElementById('sessionXpDisplay').innerText = `+${totalGainStats * 5} XP`;
+        }
+
+        function executeSession() {
+            let totalXpGained = 0;
+            stats.forEach(s => {
+                const addVal = Number(document.getElementById(`slide_${s}`).value);
+                if (addVal > 0) {
+                    const statElem = document.getElementById(s);
+                    statElem.value = Number(statElem.value) + addVal;
+                    document.getElementById(`slide_${s}`).value = 0;
+                    totalXpGained += addVal * 5;
+                }
+            });
+
+            let totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0) + totalXpGained;
+            localStorage.setItem('greatSage_totalXP', totalXP);
+
+            updateSliders();
+            updateAll();
         }
 
         function updateAll() {
-            const mult = Number(document.getElementById('transformation').value) || 1;
             const values = stats.map(s => getCalculatedStat(s));
 
-            // Reiatsu Power = Reiryoku * Multiplier
+            // Reiatsu Power = Reiryoku * Multiplier * 10
             const baseReiryoku = Number(document.getElementById('reiryoku').value) || 0;
-            const reiatsuPower = Math.round(baseReiryoku * mult * 10);
-            document.getElementById('reiatsuPower').innerText = reiatsuPower.toLocaleString();
+            const reiatsuPower = Math.round(baseReiryoku * activeMultiplier * 10);
+            document.getElementById('reiatsuVal').innerText = reiatsuPower.toLocaleString();
 
-            // Combat Rating = Total Stats * Multiplier
+            // Combat Rating = Total Base Stats * Multiplier
             const totalBase = stats.reduce((sum, s) => sum + (Number(document.getElementById(s).value) || 0), 0);
-            const combatRating = Math.round(totalBase * mult);
-            document.getElementById('combatRating').innerText = combatRating.toLocaleString();
+            const combatRating = Math.round(totalBase * activeMultiplier);
+            document.getElementById('combatVal').innerText = combatRating.toLocaleString();
+
+            // XP Bar & Level
+            const totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0);
+            const currentLevel = Math.floor(totalXP / 1000) + 1;
+            document.getElementById('lvlBadge').innerText = `LVL ${currentLevel}`;
+            document.getElementById('xpProgText').innerText = `${totalXP % 1000} / 1000 XP`;
+            document.getElementById('xpBarFill').style.width = `${((totalXP % 1000) / 1000) * 100}%`;
 
             if (chart) {
                 chart.data.datasets[0].data = values;
@@ -284,12 +562,14 @@
         }
 
         function addXP() {
-            const xp = Number(document.getElementById('xpInput').value);
+            const xp = Number(document.getElementById('xpGainInput').value);
             if (xp <= 0) return;
 
-            const target = document.getElementById('statTarget').value;
+            const target = document.getElementById('xpStatTarget').value;
+            let totalXP = Number(localStorage.getItem('greatSage_totalXP') || 0) + xp;
+            localStorage.setItem('greatSage_totalXP', totalXP);
+
             let currentPool = Number(localStorage.getItem('greatSage_xpPool') || 0) + xp;
-            
             const pointsToAdd = Math.floor(currentPool / 5);
             const remainder = currentPool % 5;
 
@@ -298,49 +578,41 @@
                 statElem.value = Number(statElem.value) + pointsToAdd;
             }
 
-            document.getElementById('xpPool').innerText = remainder;
             localStorage.setItem('greatSage_xpPool', remainder);
-            document.getElementById('xpInput').value = '';
+            document.getElementById('xpGainInput').value = '';
+            updateAll();
+        }
+
+        function addDirectPoints() {
+            const points = Number(document.getElementById('directPointInput').value);
+            if (points <= 0) return;
+
+            const target = document.getElementById('directStatTarget').value;
+            const statElem = document.getElementById(target);
+            statElem.value = Number(statElem.value) + points;
+
+            document.getElementById('directPointInput').value = '';
             updateAll();
         }
 
         function saveData() {
-            const data = {
-                name: document.getElementById('charName').value,
-                trans: document.getElementById('transformation').value
-            };
+            const data = {};
             stats.forEach(s => data[s] = document.getElementById(s).value);
             localStorage.setItem('greatSage_data', JSON.stringify(data));
         }
 
         function loadData() {
             const saved = JSON.parse(localStorage.getItem('greatSage_data') || '{}');
-            if (saved.name) document.getElementById('charName').value = saved.name;
-            if (saved.trans) document.getElementById('transformation').value = saved.trans;
-            
             stats.forEach(s => {
                 if (saved[s] !== undefined) document.getElementById(s).value = saved[s];
             });
-            
-            document.getElementById('xpPool').innerText = localStorage.getItem('greatSage_xpPool') || 0;
-        }
-
-        function resetAll() {
-            if (confirm("Are you sure you want to reset all stats and character data?")) {
-                localStorage.removeItem('greatSage_data');
-                localStorage.removeItem('greatSage_xpPool');
-                stats.forEach(s => document.getElementById(s).value = 10);
-                document.getElementById('charName').value = '';
-                document.getElementById('transformation').value = '1';
-                document.getElementById('xpPool').innerText = 0;
-                updateAll();
-            }
         }
 
         window.onload = () => {
             loadData();
             initChart();
             updateAll();
+            updateSliders();
         };
     </script>
 </body>
