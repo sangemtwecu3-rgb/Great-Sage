@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Great Sage - Training Simulator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #0f172a; color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+    .wrapper { display: flex; justify-content: center; align-items: flex-start; padding: 16px; min-height: 100vh; }
+    .card {
+      background: #1e293b; border-radius: 16px; padding: 20px;
+      max-width: 480px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .card::-webkit-scrollbar { width: 6px; }
+    .card::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    h2 { margin-top: 0; color: #38bdf8; display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 800; }
+    .badge { background: #0284c7; padding: 4px 12px; border-radius: 20px; font-size: 14px; color: #fff; }
+    
+    .chart-container {
+      position: relative; width: 100%; max-width: 320px; margin: 0 auto 20px auto; height: 260px;
+    }
+
+    .bar-container { background: #334155; border-radius: 8px; height: 12px; overflow: hidden; margin-bottom: 20px; }
+    .bar-fill { background: #38bdf8; height: 100%; width: 0%; transition: width 0.3s; }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+    .stat-title { font-size: 12px; color: #94a3b8; }
+    .stat-value { font-size: 18px; font-weight: bold; margin-top: 4px; color: #f8fafc; }
+    
+    .section-box { background: #0f172a; border: 1px solid #334155; padding: 14px; border-radius: 10px; margin-bottom: 16px; }
+    .section-title { font-size: 14px; font-weight: bold; color: #38bdf8; margin-bottom: 10px; }
+    
+    .input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .num-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; font-weight: bold; font-size: 14px; }
+    .stat-select { width: 130px; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; font-weight: bold; font-size: 13px; }
+    
+    .boost-box { background: #0f172a; border: 1px solid #e11d48; padding: 14px; border-radius: 10px; margin-bottom: 20px; }
+    .boost-header { font-size: 14px; font-weight: bold; color: #fb7185; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .boost-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
+    .boost-btn { flex: 1; padding: 8px; background: #334155; border: 1px solid #475569; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .boost-btn.active { background: #e11d48; border-color: #f43f5e; }
+    
+    .slider-group { margin-bottom: 14px; background: #0f172a; padding: 10px 12px; border-radius: 8px; }
+    .slider-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+    input[type=range] { width: 100%; accent-color: #38bdf8; cursor: pointer; height: 8px; }
+    
+    button.action-btn {
+      width: 100%; padding: 14px; background: #2563eb; color: white;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: bold;
+      cursor: pointer; transition: background 0.2s; margin-top: 6px;
+    }
+    button.action-btn:active { background: #1d4ed8; }
+    button.sec-btn { background: #0284c7; }
+    
+    .reset-btn { width: 100%; padding: 10px; background: transparent; color: #64748b; border: 1px solid #334155; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 15px; }
+    .reset-btn:hover { color: #f43f5e; border-color: #f43f5e; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="card">
+    <h2>🔮 Great Sage <span class="badge" id="lvl-display">LVL 1</span></h2>
+    
+    <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8; margin-bottom:6px; margin-top: 10px;">
+      <span>XP Progression</span>
+      <span id="xp-text">0 / 1000 XP</span>
+    </div>
+    <div class="bar-container">
+      <div class="bar-fill" id="xp-bar"></div>
+    </div>
+
+    <!-- Hexagon Radar Chart -->
+    <div class="chart-container">
+      <canvas id="statChart"></canvas>
+    </div>
+
+    <!-- Transformation Boost -->
+    <div class="boost-box">
+      <div class="boost-header">
+        <span>🔥 Transformation Boost</span>
+        <span id="active-boost-indicator" style="color: #4ade80;">BASE STATE</span>
+      </div>
+      <div class="boost-buttons">
+        <button class="boost-btn" id="btn-mask" onclick="applyMultiplier(2, 'btn-mask')">Mask (x2)</button>
+        <button class="boost-btn" id="btn-bankai" onclick="applyMultiplier(10, 'btn-bankai')">Bankai (x10)</button>
+      </div>
+      <div class="input-row" style="margin-bottom:0;">
+        <input type="number" id="custom-mult" class="num-input" placeholder="Custom Multiplier (e.g. 5)" min="1" step="0.5">
+        <button class="boost-btn" style="flex: 0 0 70px; padding:10px;" onclick="applyCustomMultiplier()">Set</button>
+      </div>
+      <button class="boost-btn" style="width:100%; margin-top:8px; background:#475569;" onclick="deactivateBoost()">Deactivate Boost</button>
+    </div>
+
+    <div class="grid">
+      <div class="stat-box">
+        <div class="stat-title">Reiatsu Power</div>
+        <div class="stat-value" id="reiatsu-val">500</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-title">Combat Rating</div>
+        <div class="stat-value" id="cr-val">150</div>
+      </div>
+    </div>
+
+    <!-- Direct XP & Points Allocation -->
+    <div class="section-box">
+      <div class="section-title">⚡ Gain XP Directly</div>
+      <div class="input-row">
+        <input type="number" id="direct-xp-input" class="num-input" placeholder="Enter XP gained (e.g. 12)" min="1">
+        <select id="direct-xp-target" class="stat-select">
+          <option value="off">Offense</option>
+          <option value="def">Defense</option>
+          <option value="mob">Mobility</option>
+          <option value="rei">Reiryoku</option>
+          <option value="str">Physical Str</option>
+          <option value="int">Intelligence</option>
+        </select>
+      </div>
+      <button class="action-btn sec-btn" onclick="addDirectXP()">Add XP & Allocate Stats</button>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">🎯 Allocate Points Directly</div>
+      <div class="input-row">
+        <input type="number" id="direct-pts-input" class="num-input" placeholder="Enter Stat Points (e.g. 3)" min="1">
+        <select id="direct-pts-target" class="stat-select">
+          <option value="off">Offense</option>
+          <option value="def">Defense</option>
+          <option value="mob">Mobility</option>
+          <option value="rei">Reiryoku</option>
+          <option value="str">Physical Str</option>
+          <option value="int">Intelligence</option>
+        </select>
+      </div>
+      <button class="action-btn sec-btn" onclick="addDirectPoints()">Add Stat Points directly</button>
+    </div>
+
+    <!-- Slider Allocator -->
+    <div style="font-size:14px; font-weight:bold; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+      <span>Training Session Allocator</span>
+      <span id="xp-preview" style="color:#38bdf8; font-size:15px;">+0 XP</span>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header"><span>Offense (<span id="base-off">5</span>)</span><span id="off-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="off-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-header"><span>Defense (<span id="base-def">5</span>)</span><span id="def-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="def-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-header"><span>Mobility (<span id="base-mob">5</span>)</span><span id="mob-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="mob-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-header"><span>Reiryoku (<span id="base-rei">5</span>)</span><span id="rei-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="rei-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-header"><span>Physical Strength (<span id="base-str">5</span>)</span><span id="str-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="str-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+    <div class="slider-group">
+      <div class="slider-header"><span>Intelligence (<span id="base-int">5</span>)</span><span id="int-val" style="color:#38bdf8;">+0 Stats</span></div>
+      <input type="range" id="int-slider" min="0" max="20" value="0" oninput="updateCalculations()">
+    </div>
+
+    <button class="action-btn" onclick="executeTraining()">Execute Session Training</button>
+    <button class="reset-btn" onclick="resetSaveData()">⚠️ Reset Great Sage Save Data</button>
+  </div>
+</div>
+
+<script>
+  const SAVE_KEY = 'great_sage_simulator_data';
+  const DEFAULT_LEVEL = 1;
+  const DEFAULT_STATS = { off: 5, def: 5, mob: 5, rei: 5, str: 5, int: 5 };
+
+  let level = DEFAULT_LEVEL;
+  let xp = 0;
+  let bar = level * 1000;
+  let baseStats = { ...DEFAULT_STATS };
+  let currentMultiplier = 1;
+  let myChart = null;
+
+  function initChart() {
+    const ctx = document.getElementById('statChart').getContext('2d');
+    myChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Offense', 'Defense', 'Mobility', 'Reiryoku', 'Strength', 'Intelligence'],
+        datasets: [{
+          label: 'Current Stats',
+          data: [5, 5, 5, 5, 5, 5],
+          backgroundColor: 'rgba(56, 189, 248, 0.25)',
+          borderColor: '#38bdf8',
+          borderWidth: 2,
+          pointBackgroundColor: '#0284c7'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            angleLines: { color: '#334155' },
+            grid: { color: '#334155' },
+            pointLabels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } },
+            ticks: { display: false },
+            suggestedMin: 0
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  function updateChart() {
+    if (!myChart) return;
+    myChart.data.datasets[0].data = [
+      getBoostedStat(baseStats.off),
+      getBoostedStat(baseStats.def),
+      getBoostedStat(baseStats.mob),
+      getBoostedStat(baseStats.rei),
+      getBoostedStat(baseStats.str),
+      getBoostedStat(baseStats.int)
+    ];
+    myChart.update();
+  }
+
+  function loadData() {
+    const savedData = localStorage.getItem(SAVE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        level = parsed.level || DEFAULT_LEVEL;
+        xp = parsed.xp || 0;
+        bar = level * 1000;
+        if (parsed.baseStats) baseStats = { ...parsed.baseStats };
+      } catch (e) {
+        console.error("Could not parse saved data", e);
+      }
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ level, xp, baseStats }));
+  }
+
+  function checkLevelUp() {
+    while (xp >= bar) {
+      level++;
+      xp -= bar;
+      bar = level * 1000;
+      alert(`🎉 LEVEL UP! Great Sage registered Level ${level}!`);
+    }
+  }
+
+  function addDirectXP() {
+    const xpInput = parseInt(document.getElementById('direct-xp-input').value);
+    const targetStat = document.getElementById('direct-xp-target').value;
+    if (!xpInput || xpInput <= 0) return;
+
+    xp += xpInput;
+    const statPointsGained = Math.floor(xpInput / 5);
+    
+    if (statPointsGained > 0) {
+      baseStats[targetStat] += statPointsGained;
+      alert(`Great Sage allocated +${statPointsGained} Stat Point(s) to ${targetStat.toUpperCase()} (+${xpInput} XP Gained)`);
+    } else {
+      alert(`Gained +${xpInput} XP! (${5 - (xpInput % 5)} more XP needed for +1 Stat Point)`);
+    }
+
+    checkLevelUp();
+    saveData();
+    renderBaseStatDisplays();
+    updateCalculations();
+    document.getElementById('direct-xp-input').value = '';
+  }
+
+  function addDirectPoints() {
+    const ptsInput = parseInt(document.getElementById('direct-pts-input').value);
+    const targetStat = document.getElementById('direct-pts-target').value;
+    if (!ptsInput || ptsInput <= 0) return;
+
+    baseStats[targetStat] += ptsInput;
+    xp += (ptsInput * 5);
+
+    alert(`Great Sage allocated +${ptsInput} Stat Point(s) directly to ${targetStat.toUpperCase()}! (+${ptsInput * 5} XP)`);
+
+    checkLevelUp();
+    saveData();
+    renderBaseStatDisplays();
+    updateCalculations();
+    document.getElementById('direct-pts-input').value = '';
+  }
+
+  function getBoostedStat(statVal) {
+    return Math.floor(statVal * currentMultiplier);
+  }
+
+  function applyMultiplier(mult, btnId) {
+    currentMultiplier = mult;
+    document.querySelectorAll('.boost-btn').forEach(b => b.classList.remove('active'));
+    if (btnId) document.getElementById(btnId).classList.add('active');
+    document.getElementById('active-boost-indicator').innerText = `${currentMultiplier}x BOOSTED`;
+    document.getElementById('active-boost-indicator').style.color = "#f43f5e";
+    renderBaseStatDisplays();
+    updateCalculations();
+  }
+
+  function applyCustomMultiplier() {
+    let val = parseFloat(document.getElementById('custom-mult').value);
+    if (val && val > 0) applyMultiplier(val, null);
+  }
+
+  function deactivateBoost() {
+    currentMultiplier = 1;
+    document.querySelectorAll('.boost-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('custom-mult').value = '';
+    document.getElementById('active-boost-indicator').innerText = "BASE STATE";
+    document.getElementById('active-boost-indicator').style.color = "#4ade80";
+    renderBaseStatDisplays();
+    updateCalculations();
+  }
+
+  function renderBaseStatDisplays() {
+    document.getElementById('base-off').innerText = getBoostedStat(baseStats.off);
+    document.getElementById('base-def').innerText = getBoostedStat(baseStats.def);
+    document.getElementById('base-mob').innerText = getBoostedStat(baseStats.mob);
+    document.getElementById('base-rei').innerText = getBoostedStat(baseStats.rei);
+    document.getElementById('base-str').innerText = getBoostedStat(baseStats.str);
+    document.getElementById('base-int').innerText = getBoostedStat(baseStats.int);
+    
+    document.getElementById('lvl-display').innerText = `LVL ${level}`;
+    document.getElementById('xp-text').innerText = `${xp} / ${bar} XP`;
+    document.getElementById('xp-bar').style.width = `${Math.min((xp/bar)*100, 100)}%`;
+
+    updateChart();
+  }
+
+  function updateCalculations() {
+    let offAdd = parseInt(document.getElementById('off-slider').value) || 0;
+    let defAdd = parseInt(document.getElementById('def-slider').value) || 0;
+    let mobAdd = parseInt(document.getElementById('mob-slider').value) || 0;
+    let reiAdd = parseInt(document.getElementById('rei-slider').value) || 0;
+    let strAdd = parseInt(document.getElementById('str-slider').value) || 0;
+    let intAdd = parseInt(document.getElementById('int-slider').value) || 0;
+
+    let totalStatsAdded = offAdd + defAdd + mobAdd + reiAdd + strAdd + intAdd;
+    let xpEarned = totalStatsAdded * 5;
+
+    document.getElementById('xp-preview').innerText = `+${xpEarned} XP`;
+
+    document.getElementById('off-val').innerText = `+${offAdd} Stats`;
+    document.getElementById('def-val').innerText = `+${defAdd} Stats`;
+    document.getElementById('mob-val').innerText = `+${mobAdd} Stats`;
+    document.getElementById('rei-val').innerText = `+${reiAdd} Stats`;
+    document.getElementById('str-val').innerText = `+${strAdd} Stats`;
+    document.getElementById('int-val').innerText = `+${intAdd} Stats`;
+
+    let activeRei = getBoostedStat(baseStats.rei) + reiAdd;
+    document.getElementById('reiatsu-val').innerText = (activeRei * 100).toLocaleString();
+    
+    let activeOff = getBoostedStat(baseStats.off) + offAdd;
+    let activeDef = getBoostedStat(baseStats.def) + defAdd;
+    let activeMob = getBoostedStat(baseStats.mob) + mobAdd;
+    let activeStr = getBoostedStat(baseStats.str) + strAdd;
+    let activeInt = getBoostedStat(baseStats.int) + intAdd;
+
+    let tempCR = (activeOff * 10) + (activeDef * 10) + (activeRei * 10) + (activeMob * 5) + (activeStr * 5) + (activeInt * 5);
+    document.getElementById('cr-val').innerText = tempCR.toLocaleString();
+  }
+
+  function executeTraining() {
+    let offAdd = parseInt(document.getElementById('off-slider').value) || 0;
+    let defAdd = parseInt(document.getElementById('def-slider').value) || 0;
+    let mobAdd = parseInt(document.getElementById('mob-slider').value) || 0;
+    let reiAdd = parseInt(document.getElementById('rei-slider').value) || 0;
+    let strAdd = parseInt(document.getElementById('str-slider').value) || 0;
+    let intAdd = parseInt(document.getElementById('int-slider').value) || 0;
+
+    let totalStatsAdded = offAdd + defAdd + mobAdd + reiAdd + strAdd + intAdd;
+    if (totalStatsAdded === 0) return;
+
+    baseStats.off += offAdd;
+    baseStats.def += defAdd;
+    baseStats.mob += mobAdd;
+    baseStats.rei += reiAdd;
+    baseStats.str += strAdd;
+    baseStats.int += intAdd;
+
+    xp += (totalStatsAdded * 5);
+
+    checkLevelUp();
+    saveData();
+    renderBaseStatDisplays();
+
+    ['off','def','mob','rei','str','int'].forEach(s => document.getElementById(`${s}-slider`).value = 0);
+    updateCalculations();
+  }
+
+  function resetSaveData() {
+    if (confirm("Reset Great Sage back to base Level 1 stats?")) {
+      localStorage.removeItem(SAVE_KEY);
+      level = DEFAULT_LEVEL;
+      xp = 0;
+      bar = level * 1000;
+      baseStats = { ...DEFAULT_STATS };
+      deactivateBoost();
+      renderBaseStatDisplays();
+      updateCalculations();
+      alert("Great Sage progress reset.");
+    }
+  }
+
+  initChart();
+  loadData();
+  renderBaseStatDisplays();
+  updateCalculations();
+</script>
+
+</body>
+</html>
